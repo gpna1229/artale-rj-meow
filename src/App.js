@@ -110,6 +110,18 @@ function App() {
     if (window.confirm("全隊標記重置？")) update(ref(database, `rooms/${roomID}`), { grid: null });
   };
 
+  const leaveSession = async () => {
+    const mySeatRef = ref(database, `rooms/${roomID}/players/${userRole.id}`);
+    await update(ref(database, `rooms/${roomID}/players`), { [userRole.id]: null });
+
+    onDisconnect(mySeatRef).cancel();
+
+    setIsJoined(false);
+    setUserRole(null);
+    setRoomID(""); 
+
+  };
+
   const closeSession = () => {
     if (window.confirm("隊伍即將解散!!")) update(ref(database, `rooms`), { [roomID]: null });
   };
@@ -174,7 +186,8 @@ function App() {
       </div>
       <div className="button-group">
         <button className="btn-clear-all" onClick={clearGlobalProgress}>全隊清除</button>
-        <button className="btn-back-inline" style={{backgroundColor: '#F39C12'}} onClick={closeSession}>💥 解散團隊</button>
+        <button className="btn-leave" onClick={leaveSession}>離開隊伍</button>
+        <button className="btn-close-all" onClick={closeSession}>解散團隊</button>
       </div>
       <div className="staircase">
         {[...Array(10)].map((_, i) => {
