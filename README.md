@@ -29,9 +29,5 @@
 * **Deployment**: GitHub Pages
 
 ## 開發者 (Developer)
-**[剛普夫人/GitHub ID]**
+**[剛普夫人]**
 一個喜歡打 LOL、玩 Artale 的軟體工程師，目前自學全端開發中。
-
----
-
-*Note: This project is for personal study and fan use only. All game assets belong to Nexon / Artale.*
