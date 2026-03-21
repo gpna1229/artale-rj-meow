@@ -1,70 +1,34 @@
-# Getting Started with Create React App
+# 阿泰爾羅密歐與朱麗葉助手小貓咪 (Artale R&J PQ Tool)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+這是一個專為 Artale 玩家開發的 **「羅密歐與朱麗葉 (R&J) 副本」** 踩格子輔助工具。透過即時同步功能，讓隊友之間能即時看到彼此標記的門，輕鬆破解關卡！
 
-## Available Scripts
+## 立即體驗
+[點擊前往小工具](https://gpna1229.github.io/artale-rj-meow/)
 
-In the project directory, you can run:
+## 特色功能
+* **即時狀態同步**：使用 Firebase Realtime Database，只要在同一個房間，一人標記，全隊即時更新！
+* **可愛視覺介面**：視覺直觀，操作不卡手。
+* **房號分流機制**：支援多人同時使用，不同隊伍只要輸入不同之隊伍名稱，資料互不干擾。
+* **響應式設計**：不論是用電腦還是用手機，都能完美適應螢幕大小。
 
-### `npm start`
+## 使用技術
+* **Frontend**: React.js (v19)
+* **Backend / Database**: Firebase Realtime Database
+* **Styling**: CSS3 (Modern Responsive UI)
+* **Deployment**: GitHub Pages
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 如何使用
+1.  **進入網頁**：開啟網址後，輸入隊伍名稱可自動創建隊伍或是加入隊伍。
+2.  **確認貓咪**：可以查看所有成員是否都已加入房間。
+3.  **即時標記**：當你在副本中發現正確的門時，點擊對應的樓層與數字按紐，隊友的畫面便會同步更新。
+4.  **重置功能**：完成一關後，點擊「全隊清除」即可清空目前盤面，迎接下一關。
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## 開發者 (Developer)
+**[剛普夫人/GitHub ID]**
+一個喜歡打 LOL、玩 Artale 的軟體工程師，目前自學全端開發中。
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+*Note: This project is for personal study and fan use only. All game assets belong to Nexon / Artale.*
