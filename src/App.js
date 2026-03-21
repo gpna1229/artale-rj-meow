@@ -106,15 +106,6 @@ function App() {
     update(ref(database, `rooms/${roomID}/grid/${fKey}`), updates);
   };
 
-  const clearPersonalProgress = () => {
-    if (!window.confirm("清除你所有的標記~？")) return;
-    const batch = {};
-    Object.keys(syncData.grid).forEach(f => {
-      [1,2,3,4].forEach(d => { if (syncData.grid[f][`d${d}`] === userRole.hex) batch[`${f}/d${d}`] = null; });
-    });
-    if (Object.keys(batch).length > 0) update(ref(database, `rooms/${roomID}/grid`), batch);
-  };
-
   const clearGlobalProgress = () => {
     if (window.confirm("全隊標記重置？")) update(ref(database, `rooms/${roomID}`), { grid: null });
   };
@@ -182,7 +173,6 @@ function App() {
         </div>
       </div>
       <div className="button-group">
-        <button className="btn-clear-mine" onClick={clearPersonalProgress}>個人清除</button>
         <button className="btn-clear-all" onClick={clearGlobalProgress}>全隊清除</button>
         <button className="btn-back-inline" style={{backgroundColor: '#F39C12'}} onClick={closeSession}>💥 解散團隊</button>
       </div>
