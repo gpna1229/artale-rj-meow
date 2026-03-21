@@ -1,32 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { database } from './firebase'; 
-import { ref, onValue, update, runTransaction, onDisconnect } from "firebase/database";
+import { ref, onValue, update, runTransaction, onDisconnect, remove } from "firebase/database";
 
-const ROLE_CONFIG = [
-  { id: 0, name: '蘇打貓', hex: '#78E8FF' },
-  { id: 1, name: '起司貓', hex: '#FFB370' },
-  { id: 2, name: '抹茶貓', hex: '#88FFBB' },
-  { id: 3, name: '花花貓', hex: '#FF99CC' }
-];
+const ROLE_CONFIG = {
+  'p0': { name: '蘇打貓', hex: '#74D6E0' },
+  'p1': { name: '起司貓', hex: '#FFB370' },
+  'p2': { name: '抹茶貓', hex: '#95E0AF' },
+  'p3': { name: '花花貓', hex: '#FF99CC' }
+};
 
 function App() {
   const [isJoined, setIsJoined] = useState(false);
-  const [roomID, setRoomID] = useState("");
+  const [roomId, setRoomId] = useState("");
   const [userRole, setUserRole] = useState(null);
   const [syncData, setSyncData] = useState({ grid: {}, players: {} });
 
   useEffect(() => {
-    if (!isJoined || !roomID) return;
+    if (!isJoined || !roomId) return;
 
-    const roomRef = ref(database, `rooms/${roomID}`);
+    const roomRef = ref(database, `rooms/${roomId}`);
     const unsubscribe = onValue(roomRef, (snapshot) => {
       const data = snapshot.val();
+
       if (!data) {
         setIsJoined(false);
         setUserRole(null);
         return;
       }
+
+      if (!data.players) {
+        remove(ref(database, `rooms/${roomId}`));
+        return;
+      }
+
       setSyncData({
         grid: data.grid || {},
         players: data.players || {}
@@ -34,49 +41,45 @@ function App() {
     });
 
     return () => unsubscribe();
-  }, [isJoined, roomID]);
+  }, [isJoined, roomId]);
 
-  const syncEntryState = (id, index) => {
-    const playerSeatRef = ref(database, `rooms/${id}/players/${index}`);
+  const syncEntryState = (targetRoomId, playerId) => {
+    const playerSeatRef = ref(database, `rooms/${targetRoomId}/players/${playerId}`);
+    
+    onDisconnect(playerSeatRef).remove();
 
-    onDisconnect(playerSeatRef).remove().then(() => {
-    });
-
-    setRoomID(id);
-    setUserRole(ROLE_CONFIG[index]);
+    setRoomId(targetRoomId);
+    setUserRole({ ...ROLE_CONFIG[playerId], id: playerId });
     setIsJoined(true);
   };
 
   const joinSession = async () => {
-    if (!roomID.trim()) return;
-    const roomRef = ref(database, `rooms/${roomID}`);
-    const seatRef = ref(database, `rooms/${roomID}/players`);
+    if (!roomId.trim()) return;
+    const playersRef = ref(database, `rooms/${roomId}/players`);
     
     try {
-      let assignedIndex = -1;
+      let assignedId = null;
       
-      const result = await runTransaction(seatRef, (currentPlayers) => {
+      const result = await runTransaction(playersRef, (currentPlayers) => {
         const players = currentPlayers || {};
-        let target = -1;
+        let targetId = null;
 
         for (let i = 0; i < 4; i++) {
-          if (!players[i]) {
-            target = i;
+          const checkId = `p${i}`;
+          if (!players[checkId]) {
+            targetId = checkId;
             break;
           }
         }
 
-        if (target === -1) return; 
+        if (!targetId) return; 
 
-        assignedIndex = target;
-        return { ...players, [target]: { active: true } };
+        assignedId = targetId;
+        return { ...players, [targetId]: { active: true } };
       });
 
-      if (result.committed && assignedIndex !== -1) {
-        if (assignedIndex === 0) {
-           onDisconnect(roomRef).remove();
-        }
-        syncEntryState(roomID, assignedIndex);
+      if (result.committed && assignedId) {
+        syncEntryState(roomId, assignedId);
       } else {
         alert("隊伍人數已滿");
       }
@@ -85,51 +88,58 @@ function App() {
     }
   };
 
-  const handleIDChange = (e) => {
-    setRoomID(e.target.value);
+  const handleRoomIdChange = (e) => {
+    setRoomId(e.target.value);
   };
 
-  const handleTileToggle = (f, d) => {
+  const toggleTileStatus = (floorNum, doorNum) => {
     if (!userRole) return;
-    const fKey = `f${f}`, dKey = `d${d}`;
+    const fKey = `f${floorNum}`, dKey = `d${doorNum}`;
     const floor = syncData.grid[fKey] || {};
 
     if (floor[dKey] && floor[dKey] !== userRole.hex) return;
+    
     if (floor[dKey] === userRole.hex) {
-      update(ref(database, `rooms/${roomID}/grid/${fKey}`), { [dKey]: null });
+      update(ref(database, `rooms/${roomId}/grid/${fKey}`), { [dKey]: null });
       return;
     }
 
     const updates = {};
-    [1, 2, 3, 4].forEach(door => { if (floor[`d${door}`] === userRole.hex) updates[`d${door}`] = null; });
+    [1, 2, 3, 4].forEach(door => { 
+      if (floor[`d${door}`] === userRole.hex) updates[`d${door}`] = null; 
+    });
+    
     updates[dKey] = userRole.hex;
-    update(ref(database, `rooms/${roomID}/grid/${fKey}`), updates);
+    update(ref(database, `rooms/${roomId}/grid/${fKey}`), updates);
   };
 
-  const clearGlobalProgress = () => {
-    if (window.confirm("全隊標記重置？")) update(ref(database, `rooms/${roomID}`), { grid: null });
+  const clearGridSession = () => {
+    if (window.confirm("確定清空全隊標記？")) {
+      update(ref(database, `rooms/${roomId}`), { grid: null });
+    }
   };
 
-  const leaveSession = async () => {
-    const mySeatRef = ref(database, `rooms/${roomID}/players/${userRole.id}`);
-    await update(ref(database, `rooms/${roomID}/players`), { [userRole.id]: null });
+  const leaveSession = async () => { 
+    const mySeatRef = ref(database, `rooms/${roomId}/players/${userRole.id}`);
 
     onDisconnect(mySeatRef).cancel();
+    await remove(mySeatRef);
 
     setIsJoined(false);
     setUserRole(null);
-    setRoomID(""); 
-
+    setRoomId(""); 
   };
 
-  const closeSession = () => {
-    if (window.confirm("隊伍即將解散!!")) update(ref(database, `rooms`), { [roomID]: null });
+  const destroySession = () => {
+    if (window.confirm("隊伍即將解散!!")) {
+      remove(ref(database, `rooms/${roomId}`));
+    }
   };
 
   if (!isJoined) {
     return (
       <div className="container">
-        <h1>阿泰爾 羅朱 助手小貓咪</h1>
+        <h1>阿泰爾 羅茱副本 助手小貓咪</h1>
         
         <div className="avatar-group">
           <img 
@@ -145,17 +155,19 @@ function App() {
         </div>
 
         <div className="welcome-section">
-          <p>歡迎使用羅密歐與朱麗葉輔助小工具~</p>
+          <p>歡迎使用羅密歐與茱麗葉輔助小工具~</p>
           <p>請直接輸入隊名以創建或進入房間</p>
-          <p>然後開始你們的副本之旅吧 ❤️</p>
+          <p>然後開始你們的副本之旅吧❤️</p>
+          <p>** 使用方式: 點選格子進行標記 再次點擊可取消標記 **</p>
         </div>
+
         <div className="join-box">
           <input 
             type="text" 
             placeholder="請輸入團隊名稱" 
             maxLength={12}
-            value={roomID} 
-            onChange={handleIDChange} 
+            value={roomId} 
+            onChange={handleRoomIdChange} 
           />
           <button className="btn-join" onClick={joinSession}>加入隊伍</button>
         </div>
@@ -166,29 +178,36 @@ function App() {
 
   return (
     <div className="container">
-      <h1>阿泰爾 羅朱 助手小貓咪</h1>
+      <h1>阿泰爾 羅茱副本 助手小貓咪</h1>
       <div className="simple-info">
         <div>
-          隊伍: <span className="highlight">{roomID}</span> | 
+          隊伍: <span className="highlight">{roomId}</span> | 
           你是: <span style={{ color: userRole?.hex, fontWeight: 'bold' }}>{userRole?.name}</span>
         </div>
+
+        <div className="button-group">
+          <button className="btn-clear-all" onClick={clearGridSession}>全隊標記清空</button>
+          <button className="btn-leave" onClick={leaveSession}>離開隊伍</button>
+          <button className="btn-close-all" onClick={destroySession}>解散</button>
+        </div>
+
         <div className="member-list">
           房間成員: 
-          {Object.keys(syncData.players).map(key => (
-            <span 
-              key={key} 
-              className="member-dot" 
-              style={{ backgroundColor: ROLE_CONFIG[key].hex }}
-              title={ROLE_CONFIG[key].name}
-            ></span>
-          ))}
+          {Object.keys(syncData.players).map(key => {
+              const config = ROLE_CONFIG[key];
+              if (!config) return null;
+              return (
+                <span 
+                  key={key} 
+                  className="member-dot" 
+                  style={{ backgroundColor: config.hex }}
+                  title={config.name}
+                ></span>
+              );
+            })}
         </div>
       </div>
-      <div className="button-group">
-        <button className="btn-clear-all" onClick={clearGlobalProgress}>全隊清除</button>
-        <button className="btn-leave" onClick={leaveSession}>離開隊伍</button>
-        <button className="btn-close-all" onClick={closeSession}>解散團隊</button>
-      </div>
+
       <div className="staircase">
         {[...Array(10)].map((_, i) => {
           const fNum = 10 - i;
@@ -198,13 +217,14 @@ function App() {
               {[1, 2, 3, 4].map(dNum => (
                 <div key={dNum} className="door"
                   style={{ backgroundColor: syncData.grid[`f${fNum}`]?.[`d${dNum}`] || (fNum % 2 === 0 ? '#3A3A3A' : '#2A2A2A') }}
-                  onClick={() => handleTileToggle(fNum, dNum)}
+                  onClick={() => toggleTileStatus(fNum, dNum)}
                 >{dNum}</div>
               ))}
             </div>
           );
         })}
       </div>
+
       <footer className="footer-info">© 2026 剛普夫人 | gpna1229</footer>
     </div>
   );
