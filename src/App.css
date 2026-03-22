@@ -43,7 +43,7 @@ h1 {
 
 .welcome-section {
   text-align: center;
-  margin-bottom: 25px;
+  margin-bottom: 5px;
   color: #DDD;
   line-height: 1.6;
 }
@@ -51,6 +51,27 @@ h1 {
 .welcome-section p {
   margin: 5px 0;
   font-size: 0.95rem;
+}
+
+.lobby-status {
+  margin: 10px 0;
+  text-align: center;
+}
+
+.status-badge {
+  background-color: #f0f4f8;
+  color: #555;
+  padding: 6px 15px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  border: 1px solid #d1d9e6;
+  display: inline-block;
+}
+
+.status-badge strong {
+  color: #4A90E2;
+  font-size: 1.1rem;
+  margin: 0 4px;
 }
 
 .join-box {

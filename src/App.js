@@ -11,10 +11,37 @@ const ROLE_CONFIG = {
 };
 
 function App() {
+  const [activeRoomCount, setActiveRoomCount] = useState(null);
+  const [playerCount, setPlayerCount] = useState(null);
   const [isJoined, setIsJoined] = useState(false);
   const [roomId, setRoomId] = useState("");
   const [userRole, setUserRole] = useState(null);
   const [syncData, setSyncData] = useState({ grid: {}, players: {} });
+
+  useEffect(() => {
+    const roomsRef = ref(database, 'rooms');
+    const unsubscribe = onValue(roomsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const roomEntries = Object.values(data);
+        const activeRooms = roomEntries.filter(room => 
+          room.players && Object.keys(room.players).length > 0
+        );
+        setActiveRoomCount(activeRooms.length);
+
+        let totalPlayers = 0;
+        activeRooms.forEach(room => {
+          totalPlayers += Object.keys(room.players).length;
+        });
+        setPlayerCount(totalPlayers);
+      } else {
+        setActiveRoomCount(0);
+        setPlayerCount(0);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (!isJoined || !roomId) return;
@@ -158,7 +185,14 @@ function App() {
           <p>歡迎使用羅密歐與茱麗葉輔助小工具~</p>
           <p>請直接輸入隊名以創建或進入房間</p>
           <p>然後開始你們的副本之旅吧❤️</p>
-          <p>** 使用方式: 點選格子進行標記 再次點擊可取消標記 **</p>
+          <p>★使用方式: 點選格子進行標記 再次點擊可取消標記★</p>
+        </div>
+
+        <div className="lobby-status">
+          <span className="status-badge">
+            🐾 目前共有 <strong>{activeRoomCount}</strong> 組挑戰隊伍在線，
+            其中有 <strong>{playerCount}</strong> 隻貓貓
+          </span>
         </div>
 
         <div className="join-box">
