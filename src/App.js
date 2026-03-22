@@ -206,7 +206,7 @@ function App() {
         </div>
           
         <p className="server-limit-hint">
-          ※ 最多只可容納 100 人，超過的玩家將無法正常使用還請見諒
+          ※ 若無法看到上面貓貓數量代表同時可連線玩家數量已滿，還請見諒
         </p>
 
         <footer className="footer-info">© 2026 剛普夫人 | gpna1229</footer>
