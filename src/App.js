@@ -190,8 +190,7 @@ function App() {
 
         <div className="lobby-status">
           <span className="status-badge">
-            🐾 目前共有 <strong>{activeRoomCount}</strong> 組挑戰隊伍在線，
-            其中有 <strong>{playerCount}</strong> 隻貓貓
+            🐾 有 <strong> {activeRoomCount}</strong> 組隊伍在線中，其中有 <strong>{playerCount}</strong> 隻貓貓
           </span>
         </div>
 
@@ -205,6 +204,11 @@ function App() {
           />
           <button className="btn-join" onClick={joinSession}>加入隊伍</button>
         </div>
+          
+        <p className="server-limit-hint">
+          ※ 最多只可容納 100 人，超過的玩家將無法正常使用還請見諒
+        </p>
+
         <footer className="footer-info">© 2026 剛普夫人 | gpna1229</footer>
       </div>
     );
