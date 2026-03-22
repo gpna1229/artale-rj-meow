@@ -5,6 +5,9 @@
 ## 立即體驗
 [點擊前往小工具](https://gpna1229.github.io/artale-rj-meow/)
 
+<img src="https://github.com/user-attachments/assets/507ff1a4-79a7-4587-8c2d-33b6ac4a0e71" alt="App Preview" width="300px">
+<img src="https://github.com/user-attachments/assets/87018f9e-9241-48e9-b1e5-99f3f144d1a7" alt="App Preview" width="300px">
+
 ## 特色功能
 * **即時狀態同步**：使用 Firebase Realtime Database，只要在同一個房間，一人標記，全隊即時更新！
 * **可愛視覺介面**：視覺直觀，顏色特別挑選不傷眼，操作不卡手。
