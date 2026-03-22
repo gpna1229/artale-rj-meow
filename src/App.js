@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { database } from './firebase'; 
-import { ref, onValue, update, runTransaction, onDisconnect, remove } from "firebase/database";
+import { ref, onValue, update, runTransaction, onDisconnect, remove , get, goOffline, goOnline} from "firebase/database";
 
 const ROLE_CONFIG = {
   'p0': { name: '蘇打貓', hex: '#74D6E0' },
@@ -17,31 +17,48 @@ function App() {
   const [roomId, setRoomId] = useState("");
   const [userRole, setUserRole] = useState(null);
   const [syncData, setSyncData] = useState({ grid: {}, players: {} });
+  const [isConnectError, setIsConnectError] = useState(false);
 
   useEffect(() => {
-    const roomsRef = ref(database, 'rooms');
-    const unsubscribe = onValue(roomsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const roomEntries = Object.values(data);
-        const activeRooms = roomEntries.filter(room => 
-          room.players && Object.keys(room.players).length > 0
-        );
-        setActiveRoomCount(activeRooms.length);
+    const fetchCounts = async () => {
+      if (isJoined) return;
 
-        let totalPlayers = 0;
-        activeRooms.forEach(room => {
-          totalPlayers += Object.keys(room.players).length;
-        });
-        setPlayerCount(totalPlayers);
-      } else {
-        setActiveRoomCount(0);
-        setPlayerCount(0);
+      goOnline(database);
+
+      const roomsRef = ref(database, 'rooms');
+      try {
+        const snapshot = await get(roomsRef);
+        const data = snapshot.val();
+        setIsConnectError(false);
+
+        if (data) {
+          const roomEntries = Object.values(data);
+          const activeRooms = roomEntries.filter(room => 
+            room.players && Object.keys(room.players).length > 0
+          );
+          setActiveRoomCount(activeRooms.length);
+
+          let totalPlayers = 0;
+          activeRooms.forEach(room => {
+            totalPlayers += Object.keys(room.players).length;
+          });
+          setPlayerCount(totalPlayers);
+        } else {
+          setActiveRoomCount(0);
+          setPlayerCount(0);
+        }
+      } catch (e) {
+        console.error("連線資料庫失敗:", e);
+        setIsConnectError(true);
+      } finally {
+        setTimeout(() => {
+          goOffline(database);
+        }, 1500);
       }
-    });
+    };
 
-    return () => unsubscribe();
-  }, []);
+    fetchCounts();
+  }, [isJoined]);
 
   useEffect(() => {
     if (!isJoined || !roomId) return;
@@ -82,11 +99,14 @@ function App() {
 
   const joinSession = async () => {
     if (!roomId.trim()) return;
+
+    goOnline(database);
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     const playersRef = ref(database, `rooms/${roomId}/players`);
     
     try {
-      let assignedId = null;
-      
+      let assignedId = null; 
       const result = await runTransaction(playersRef, (currentPlayers) => {
         const players = currentPlayers || {};
         let targetId = null;
@@ -111,7 +131,7 @@ function App() {
         alert("隊伍人數已滿");
       }
     } catch (e) {
-      alert("加入失敗");
+      alert("加入失敗，伺服器人數已滿");
     }
   };
 
@@ -194,6 +214,12 @@ function App() {
           </span>
         </div>
 
+        {isConnectError && (
+          <div style={{ color: '#FFD700', fontWeight: 'bold', marginBottom: '10px', fontSize: '14px' }}>
+            ⚠️ 伺服器連線已滿，暫時無法加入隊伍
+          </div>
+        )}
+
         <div className="join-box">
           <input 
             type="text" 
@@ -206,7 +232,7 @@ function App() {
         </div>
           
         <p className="server-limit-hint">
-          ※ 若無法看到上面貓貓數量代表同時可連線玩家數量已滿，還請見諒
+          ※ 為了最佳化使用體驗，設有連線限制還請見諒
         </p>
 
         <footer className="footer-info">© 2026 剛普夫人 | gpna1229</footer>
